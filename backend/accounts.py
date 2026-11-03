@@ -169,6 +169,7 @@ def login(conn: sqlite3.Connection, data: Any, ip: str) -> dict:
     email_key, ip_key = f"login:{email}", f"login-ip:{ip}"
     if security.throttle_count(conn, email_key, config.LOGIN_WINDOW_SECONDS) >= config.LOGIN_MAX_FAILURES or \
        security.throttle_count(conn, ip_key, config.LOGIN_WINDOW_SECONDS) >= config.LOGIN_IP_MAX_FAILURES:
+        audit_auth_event(conn, "LOGIN_BLOCKED", email=email, ip=ip, reason="Muitas tentativas inválidas: login bloqueado por 15 minutos.")
         raise TooManyRequests("Muitas tentativas de login. Aguarde 15 minutos e tente novamente.")
 
     row = conn.execute("SELECT * FROM profiles WHERE lower(email) = ?", (email,)).fetchone()
@@ -177,23 +178,36 @@ def login(conn: sqlite3.Connection, data: Any, ip: str) -> dict:
         request = conn.execute("SELECT status, password_hash FROM signup_requests WHERE lower(email) = ? ORDER BY created_at DESC LIMIT 1", (email,)).fetchone()
         if request and security.verify_password(password, request["password_hash"]):
             if request["status"] == "PENDING":
+                audit_auth_event(conn, "LOGIN_FAILED", email=email, ip=ip, reason="Solicitação de acesso ainda pendente.")
                 raise Forbidden("Sua solicitação de acesso ainda está aguardando aprovação do administrador.")
             if request["status"] == "REJECTED":
+                audit_auth_event(conn, "LOGIN_FAILED", email=email, ip=ip, reason="Solicitação de acesso recusada.")
                 raise Forbidden("Sua solicitação de acesso foi recusada. Procure o administrador.")
         elif not request:
             security.burn_password_check(password)
         _register_failure(conn, email_key, ip_key)
+        audit_auth_event(conn, "LOGIN_FAILED", email=email, ip=ip, reason="E-mail não cadastrado.")
         raise Unauthorized(INVALID_LOGIN)
 
     profile = dict(row)
     if not security.verify_password(password, profile["password_hash"]):
         _register_failure(conn, email_key, ip_key)
+        audit_auth_event(conn, "LOGIN_FAILED", profile_id=profile["id"], email=email, ip=ip, reason="Senha incorreta.")
         raise Unauthorized(INVALID_LOGIN)
     if profile["status"] != "ACTIVE":
+        audit_auth_event(conn, "LOGIN_FAILED", profile_id=profile["id"], email=email, ip=ip, reason="Usuário inativo.")
         raise Forbidden("Este usuário está inativo. Procure um administrador.")
     security.throttle_clear(conn, email_key)
     conn.execute("UPDATE profiles SET last_login_at = ? WHERE id = ?", (utc_now(), profile["id"]))
+    audit_auth_event(conn, "LOGIN_SUCCEEDED", actor_id=profile["id"], profile_id=profile["id"], email=email, ip=ip)
     return profile
+
+
+def audit_auth_event(conn: sqlite3.Connection, action: str, *, actor_id: str | None = None, profile_id: str | None = None,
+                     email: str = "", ip: str = "", reason: str = "", path: str = "") -> None:
+    """Login, logout e acessos negados no Registro de atividades (a senha digitada nunca é gravada)."""
+    data = {"email": email, **({"reason": reason} if reason else {}), **({"path": path} if path else {})}
+    audit.write(conn, actor_id, [(action, "USER", profile_id, None, data, {"source": "server", "ip": ip})])
 
 
 def _register_failure(conn: sqlite3.Connection, email_key: str, ip_key: str) -> None:

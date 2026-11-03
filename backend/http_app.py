@@ -100,6 +100,9 @@ def login(req: Request):
 
 @route("POST", "/api/auth/logout", auth=False)
 def logout(req: Request):
+    if req.session:
+        profile = req.session["profile"]
+        accounts.audit_auth_event(req.conn, "LOGOUT", actor_id=profile["id"], profile_id=profile["id"], email=profile["email"], ip=req.ip)
     accounts.destroy_session(req.conn, req.handler.session_token())
     req.handler.set_session_cookie("", 0)
     return {"ok": True}
@@ -263,6 +266,7 @@ class Handler(BaseHTTPRequestHandler):
                 self._send_json(HTTPStatus.METHOD_NOT_ALLOWED, {"error": "Método não suportado."})
             return
         conn = None
+        session = None
         try:
             for route_method, pattern, handler, needs_auth in ROUTES:
                 match = pattern.match(path)
@@ -285,6 +289,8 @@ class Handler(BaseHTTPRequestHandler):
             result = handler(Request(self, conn, session, body), **match.groupdict())
             self._send_json(HTTPStatus.OK, result)
         except ApiError as error:
+            if error.status == 403 and conn is not None and session:
+                self._record_access_denied(conn, session["profile"], f"{method} {path}", str(error))
             self._send_json(error.status, {"error": str(error)})
         except Exception:  # erro inesperado: detalhe só no terminal, nunca para o navegador
             traceback.print_exc(file=sys.stderr)
@@ -292,6 +298,13 @@ class Handler(BaseHTTPRequestHandler):
         finally:
             if conn is not None:
                 conn.close()
+
+    def _record_access_denied(self, conn, profile: dict, path: str, message: str) -> None:
+        """Tentativa de usar uma funcionalidade sem permissão fica no Registro de atividades."""
+        try:
+            accounts.audit_auth_event(conn, "ACCESS_DENIED", actor_id=profile["id"], profile_id=profile["id"], email=profile["email"], ip=self.client_address[0], reason=message, path=path)
+        except Exception:  # o registro nunca pode impedir a resposta de acesso negado
+            traceback.print_exc(file=sys.stderr)
 
     def _check_request_origin(self) -> None:
         """Defesa contra CSRF: cabeçalho próprio (força preflight entre origens) + Origin igual ao Host."""

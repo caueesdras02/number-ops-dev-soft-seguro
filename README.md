@@ -88,6 +88,7 @@ Demais proteções:
 - Proteção CSRF: token por sessão + cabeçalho próprio + checagem de `Origin`.
 - Login bloqueado por 15 minutos após 5 erros no mesmo e-mail (e limite por IP); limite de solicitações de acesso por IP.
 - Mensagem genérica de login inválido (não revela se o e-mail existe).
+- Registro de atividades de segurança: login realizado, tentativa de login inválida (com o motivo e o e-mail, nunca a senha), bloqueio por excesso de tentativas, logout e acesso negado (qual funcionalidade foi tentada).
 - Desativar um usuário ou mudar seu nível de acesso derruba as sessões dele imediatamente.
 - *Esqueci minha senha*: o MASTER usa **Redefinir senha**, que gera uma senha temporária; o usuário é obrigado a criar uma nova no próximo login.
 - Cabeçalhos `Content-Security-Policy`, `X-Frame-Options`, `X-Content-Type-Options` e `Referrer-Policy`; o servidor só entrega `index.html`, `manifest.json` e `src/` (nunca `backend/` ou `data/`).

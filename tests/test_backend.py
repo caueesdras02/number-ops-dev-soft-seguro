@@ -284,6 +284,18 @@ class BackendTest(unittest.TestCase):
         finally:
             conn.close()
 
+    def test_auth_events_are_audited(self):
+        viewer = self.create_user(81, "VIEWER")
+        status, _ = Client(self.port).login(MASTER["email"], "Errada#123x")
+        self.assertEqual(status, 401)
+        self.assertEqual(viewer.request("POST", "/api/state/sync", {"changes": {"numbers": [number("5511911110081")]}})[0], 403)
+        _, data = self.master.request("GET", "/api/audit-logs")
+        failed = next(log for log in data["logs"] if log["action"] == "LOGIN_FAILED" and log["new_data"]["email"] == MASTER["email"])
+        self.assertEqual(failed["new_data"]["reason"], "Senha incorreta.")
+        self.assertNotIn("Errada#123x", json.dumps(data["logs"]))  # a senha digitada nunca vai para o registro
+        self.assertTrue(any(log["action"] == "LOGIN_SUCCEEDED" for log in data["logs"]))
+        self.assertTrue(any(log["action"] == "ACCESS_DENIED" and log["new_data"]["path"] == "POST /api/state/sync" for log in data["logs"]))
+
     # ---------------------------------------------------------------- usuários
 
     def test_last_master_cannot_be_demoted(self):

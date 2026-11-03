@@ -60,6 +60,11 @@ const ACTION_LABELS = Object.freeze({
   SIGNUP_REQUEST_APPROVED: "Solicitação de acesso aprovada",
   SIGNUP_REQUEST_REJECTED: "Solicitação de acesso recusada",
   BACKUP_RESTORED: "Backup restaurado",
+  LOGIN_SUCCEEDED: "Login realizado",
+  LOGIN_FAILED: "Tentativa de login inválida",
+  LOGIN_BLOCKED: "Login bloqueado (excesso de tentativas)",
+  LOGOUT: "Logout",
+  ACCESS_DENIED: "Acesso negado",
 });
 
 const ENTITY_LABELS = Object.freeze({ NUMBER: "Número", CAMPAIGN: "Campanha", CLIENT: "Cliente", SQUAD: "Squad", INCIDENT: "Ocorrência", USER: "Usuário", LOCATION: "Localização", RESPONSIBLE: "Colaborador", SIGNUP_REQUEST: "Solicitação de acesso", SYSTEM: "Sistema" });
@@ -109,7 +114,7 @@ export class AuditLogService {
     if(log.entityType==="CLIENT") return state.clients.find((item)=>item.id===log.entityId)?.name??log.entityId;
     if(log.entityType==="SQUAD") return squads.find((item)=>item.id===log.entityId)?.name??log.entityId;
     if(log.entityType==="INCIDENT") return state.incidents.find((item)=>item.id===log.entityId)?.title??log.entityId;
-    if(log.entityType==="USER") return profiles.find((item)=>item.id===log.entityId)?.name??log.entityId;
+    if(log.entityType==="USER") return profiles.find((item)=>item.id===log.entityId)?.name??log.newData?.email??log.entityId;
     if(log.entityType==="LOCATION") return state.locations.find((item)=>item.id===log.entityId)?.name??log.entityId;
     if(log.entityType==="RESPONSIBLE") return state.responsibles.find((item)=>item.id===log.entityId)?.name??log.entityId;
     return log.entityId||"—";
@@ -127,6 +132,8 @@ export class AuditLogService {
 
   summary(log) {
     const before=log.previousData??{},after=log.newData??{};
+    // Login/acesso negado: mostra o motivo e o e-mail tentado em vez dos campos alterados.
+    if(after.reason) return `${after.reason}${after.path?` (${after.path})`:` (${after.email})`}`;
     const keys=[...new Set([...Object.keys(before),...Object.keys(after)])].map(normalizeKey).filter((key)=>comparable(before[key]??before[key.replace(/[A-Z]/g,(letter)=>`_${letter.toLowerCase()}`)])!==comparable(after[key]??after[key.replace(/[A-Z]/g,(letter)=>`_${letter.toLowerCase()}`)]));
     if(!keys.length) return log.actionLabel;
     const labels=keys.slice(0,3).map((key)=>FIELD_LABELS[key]??key);
