@@ -1,0 +1,5 @@
+const BRAND = "./src/assets/logo-wordmark.svg";
+
+export function renderAboutModal() {
+  return `<div class="modal-backdrop about-backdrop" data-about-modal><article class="modal-card about-modal" role="dialog" aria-modal="true" aria-labelledby="about-title"><button class="icon-button about-close" type="button" data-about-close aria-label="Fechar Sobre o Number Ops">×</button><img src="${BRAND}" alt="Number Ops"><div><p class="eyebrow">Gestão operacional de números</p><h2 id="about-title">Sobre o Number Ops</h2><p>Number Ops é um sistema para centralizar e organizar a operação de números e chips utilizados por empresas em seus canais de atendimento e campanhas.</p><p>A plataforma reúne status operacional, utilização, responsáveis, clientes, squads, campanhas, ocorrências, histórico e o registro de atividades, reduzindo controles manuais e deixando a operação mais rastreável.</p><p>Roda localmente com um servidor em Python e banco de dados SQLite, com controle de acesso por perfil, senhas protegidas por hash e aprovação de novos usuários.</p></div></article></div>`;
+}

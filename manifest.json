@@ -1,0 +1,13 @@
+{
+  "name": "Number Ops",
+  "short_name": "Number Ops",
+  "description": "Gerenciamento operacional de números e chips para empresas.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#0b1f18",
+  "theme_color": "#0b1f18",
+  "icons": [
+    { "src": "./src/assets/logo-mark.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

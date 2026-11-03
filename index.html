@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Number Ops — gerenciamento operacional de números e chips para empresas." />
+    <meta name="color-scheme" content="light dark" />
+    <title>Number Ops</title>
+    <!-- Anti-flash: aplica o tema salvo antes do CSS pintar (arquivo externo por causa da CSP). -->
+    <script src="./src/js/theme-init.js"></script>
+    <link rel="icon" type="image/svg+xml" href="./src/assets/favicon.svg" />
+    <link rel="manifest" href="./manifest.json" />
+    <meta name="theme-color" content="#0b1f18" />
+    <link rel="stylesheet" href="./src/css/main.css" />
+  </head>
+  <body>
+    <div id="app" class="app-shell">
+      <button class="mobile-nav-overlay" type="button" data-mobile-nav-close aria-label="Fechar menu"></button>
+      <aside class="sidebar" id="primary-navigation" aria-label="Navegação principal">
+        <button class="brand" type="button" data-about-open aria-label="Abrir Sobre o Number Ops">
+          <img class="brand-logo" src="./src/assets/logo-mark.svg" alt="" />
+          <span class="brand-copy"><strong>Number Ops</strong><small>Gestão de números</small></span>
+        </button>
+        <nav class="navigation" aria-label="Seções do sistema">
+          <div class="nav-group">
+            <a class="navigation-link is-active" href="#dashboard" data-view="dashboard"><span class="nav-icon" aria-hidden="true">⌂</span><span>Visão geral</span></a>
+          </div>
+          <div class="nav-group">
+            <p class="nav-group-label">Operação</p>
+            <a class="navigation-link" href="#numbers" data-view="numbers"><span class="nav-icon" aria-hidden="true">#</span><span>Números</span></a>
+            <a class="navigation-link" href="#campaigns" data-view="campaigns"><span class="nav-icon" aria-hidden="true">◆</span><span>Campanhas</span></a>
+            <a class="navigation-link" href="#clients" data-view="clients"><span class="nav-icon" aria-hidden="true">◉</span><span>Clientes</span></a>
+            <a class="navigation-link" href="#groups" data-view="groups"><span class="nav-icon" aria-hidden="true">◇</span><span>Squads</span></a>
+          </div>
+          <div class="nav-group">
+            <p class="nav-group-label">Gestão</p>
+            <a class="navigation-link" href="#responsibles" data-view="responsibles"><span class="nav-icon" aria-hidden="true">♙</span><span>Colaboradores</span></a>
+            <a class="navigation-link" href="#profiles" data-view="profiles"><span class="nav-icon" aria-hidden="true">◎</span><span>Usuários</span><span class="nav-badge" data-signup-badge hidden aria-label="Solicitações de acesso pendentes"></span></a>
+          </div>
+          <div class="nav-group">
+            <p class="nav-group-label">Acompanhamento</p>
+            <a class="navigation-link" href="#incidents" data-view="incidents"><span class="nav-icon" aria-hidden="true">!</span><span>Ocorrências</span></a>
+            <a class="navigation-link" href="#history" data-view="history"><span class="nav-icon" aria-hidden="true">↺</span><span>Histórico</span></a>
+            <a class="navigation-link" href="#activity" data-view="activity" data-admin-only hidden><span class="nav-icon" aria-hidden="true">≡</span><span>Registro de atividades</span></a>
+          </div>
+          <div class="nav-group">
+            <p class="nav-group-label">Sistema</p>
+            <a class="navigation-link" href="#guide" data-view="guide"><span class="nav-icon" aria-hidden="true">✦</span><span>Boas práticas</span></a>
+            <a class="navigation-link" href="#backup" data-view="backup"><span class="nav-icon" aria-hidden="true">⇅</span><span>Dados e Backup</span></a>
+          </div>
+        </nav>
+        <p class="sidebar-note">Dados locais · servidor Python + SQLite</p>
+      </aside>
+      <main class="main-content">
+        <header class="topbar">
+          <button class="mobile-menu-toggle" type="button" data-mobile-nav-toggle aria-label="Abrir menu" aria-controls="primary-navigation" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"/></svg></button>
+          <div><p class="eyebrow">Operação</p><h1 id="page-title">Visão geral</h1></div>
+          <div class="topbar-actions"><button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false" aria-label="Alternar tema"><span data-theme-icon aria-hidden="true">☀</span></button><span class="environment-label">Number Ops</span><button class="button button-quiet" type="button" data-change-password hidden>Alterar senha</button><button class="button button-quiet" type="button" data-auth-logout hidden>Sair</button></div>
+        </header>
+      <section id="page-content" class="page-content" aria-live="polite"></section>
+      <footer class="app-footer">Number Ops · Gerenciamento operacional de números</footer>
+      </main>
+    </div>
+    <div class="toast-region" aria-live="polite" aria-atomic="true"></div>
+    <noscript>Ative o JavaScript para utilizar o Number Ops.</noscript>
+    <script type="module" src="./src/js/app.js"></script>
+  </body>
+</html>

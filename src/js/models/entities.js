@@ -1,0 +1,11 @@
+import { INCIDENT_STATUSES } from "../config/constants.js";
+import { createId, now } from "./helpers.js";
+function createNamedEntity(prefix, { name, isActive = true } = {}) { const timestamp = now(); return { id: createId(prefix), name: String(name ?? "").trim(), isActive, createdAt: timestamp, updatedAt: timestamp }; }
+export const createClient = (data) => ({ ...createNamedEntity("client", data), squadId: data.squadId || null });
+export const createGroup = (data) => createNamedEntity("group", data);
+export function createResponsible({ name, team = "", squadId = null, isActive = true } = {}) { return { ...createNamedEntity("responsible", { name, isActive }), team: String(team ?? "").trim(), squadId: squadId || null }; }
+export const createLocation = (data) => ({ ...createNamedEntity("location", data), responsibleId: data.responsibleId || null });
+export function createCampaign({ name, clientId = null, squadId = null, responsibleId = null, notes = "", status = "ACTIVE", stage = "PLANEJAMENTO" } = {}) { const timestamp = now(); return { id: createId("campaign"), name: String(name ?? "").trim(), clientId: clientId || null, squadId: squadId || null, responsibleId: responsibleId || null, notes: String(notes ?? "").trim(), status, stage, startedAt: timestamp, endedAt: null, createdAt: timestamp, updatedAt: timestamp }; }
+export function createNumberCampaignLink({ numberId, campaignId, role } = {}) { const timestamp = now(); return { id: createId("campaign-link"), numberId, campaignId, role, startedAt: timestamp, endedAt: null, createdAt: timestamp, updatedAt: timestamp }; }
+export function createIncident({ numberId, type, responsibleId = null, description = "" } = {}) { const timestamp = now(); return { id: createId("incident"), numberId, type, responsibleId, description, status: INCIDENT_STATUSES.OPEN, resolvedAt: null, resolutionNotes: "", resolvedById: null, createdAt: timestamp, updatedAt: timestamp }; }
+export function createHistoryEvent({ numberId, type, description, previousValue = null, newValue = null, metadata = null } = {}) { return Object.freeze({ id: createId("history"), numberId, type, description, previousValue, newValue, metadata, occurredAt: now() }); }

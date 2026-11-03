@@ -1,0 +1,2 @@
+import { createHistoryEvent } from "../models/entities.js";
+export class HistoryService { constructor(numbersService) { this.numbersService = numbersService; } add(event) { const item = createHistoryEvent(event); this.numbersService.state.historyEvents.push(item); this.numbersService.persist(); return item; } list(numberId = null) { return this.numbersService.state.historyEvents.filter((event) => !numberId || event.numberId === numberId).sort((a, b) => b.occurredAt.localeCompare(a.occurredAt)); } }
