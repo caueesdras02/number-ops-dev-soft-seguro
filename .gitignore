@@ -1,5 +1,5 @@
-# Banco SQLite, chave de HMAC do CPF e backups locais — dados reais, nunca versionar
-data/
+﻿# Banco SQLite, chave de HMAC do CPF e backups locais — dados reais, nunca versionar
+/data/
 
 # Python
 __pycache__/
