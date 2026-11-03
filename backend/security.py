@@ -78,9 +78,41 @@ def _personal_fragments(name: str, email: str) -> list[str]:
     return fragments
 
 
+def pbkdf2_sha256(password: bytes, salt: bytes, iterations: int) -> bytes:
+    """PBKDF2-HMAC-SHA256: usa a versão nativa (OpenSSL) quando existe.
+
+    O Python do navegador (Pyodide, modo GitHub Pages) não traz OpenSSL, então lá
+    entra a implementação do RFC 8018 abaixo, que gera exatamente o mesmo resultado.
+    """
+    if hasattr(hashlib, "pbkdf2_hmac"):
+        return hashlib.pbkdf2_hmac("sha256", password, salt, iterations)
+    return _pbkdf2_sha256_pure(password, salt, iterations)
+
+
+def _pbkdf2_sha256_pure(password: bytes, salt: bytes, iterations: int) -> bytes:
+    inner, outer = hashlib.sha256(), hashlib.sha256()
+    key = password if len(password) <= inner.block_size else hashlib.sha256(password).digest()
+    key = key.ljust(inner.block_size, b"\x00")
+    inner.update(bytes(byte ^ 0x36 for byte in key))
+    outer.update(bytes(byte ^ 0x5C for byte in key))
+
+    def prf(message: bytes) -> bytes:
+        inner_copy, outer_copy = inner.copy(), outer.copy()
+        inner_copy.update(message)
+        outer_copy.update(inner_copy.digest())
+        return outer_copy.digest()
+
+    block = prf(salt + (1).to_bytes(4, "big"))
+    result = int.from_bytes(block, "big")
+    for _ in range(iterations - 1):
+        block = prf(block)
+        result ^= int.from_bytes(block, "big")
+    return result.to_bytes(len(block), "big")
+
+
 def hash_password(password: str) -> str:
     salt = secrets.token_bytes(16)
-    digest = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, config.PASSWORD_ITERATIONS)
+    digest = pbkdf2_sha256(password.encode("utf-8"), salt, config.PASSWORD_ITERATIONS)
     return "pbkdf2_sha256${}${}${}".format(
         config.PASSWORD_ITERATIONS,
         base64.b64encode(salt).decode("ascii"),
@@ -95,7 +127,7 @@ def verify_password(password: str, stored: str) -> bool:
             return False
         salt = base64.b64decode(salt_b64)
         expected = base64.b64decode(digest_b64)
-        digest = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, int(iterations))
+        digest = pbkdf2_sha256(password.encode("utf-8"), salt, int(iterations))
     except (ValueError, TypeError):
         return False
     return hmac.compare_digest(digest, expected)

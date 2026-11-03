@@ -11,6 +11,10 @@ DB_PATH = DATA_DIR / "number_ops.db"
 BACKUP_DIR = DATA_DIR / "backups"
 SECRET_PATH = DATA_DIR / "secret.key"
 
+# Modo navegador (GitHub Pages): este mesmo backend roda no Pyodide, dentro de um
+# Web Worker, sem servidor (ver backend/browser_app.py).
+BROWSER_MODE = os.environ.get("NUMBER_OPS_BROWSER") == "1"
+
 # Arquivos estáticos que o servidor pode entregar. Qualquer coisa fora disso
 # (backend/, data/, tests/...) nunca é servida, mesmo que o caminho exista.
 STATIC_ROOT_FILES = {"/index.html", "/manifest.json"}

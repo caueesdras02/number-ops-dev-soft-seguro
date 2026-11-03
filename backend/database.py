@@ -272,7 +272,8 @@ def initialize(path: Path | None = None) -> None:
     config.ensure_data_dir()
     conn = connect(path)
     try:
-        conn.execute("PRAGMA journal_mode = WAL")
+        if not config.BROWSER_MODE:  # no navegador o banco precisa ser um arquivo único, salvo no IndexedDB
+            conn.execute("PRAGMA journal_mode = WAL")
         conn.executescript(SCHEMA)
         conn.execute(
             "INSERT INTO app_meta(key, value) VALUES ('schema_version', ?) ON CONFLICT(key) DO NOTHING",

@@ -148,6 +148,12 @@ class BackendTest(unittest.TestCase):
         self.assertTrue(security.password_policy_errors("Aaa#1aaa"))  # 3 iguais seguidos
         self.assertEqual(security.password_policy_errors(STRONG), [])
 
+    def test_pure_pbkdf2_matches_native(self):
+        # Fallback usado no navegador (Pyodide não tem OpenSSL) precisa gerar o mesmo hash.
+        import hashlib
+        for password in (b"Forte#2026x", b"x" * 100):
+            self.assertEqual(security._pbkdf2_sha256_pure(password, b"sal-aleatorio", 1_000), hashlib.pbkdf2_hmac("sha256", password, b"sal-aleatorio", 1_000))
+
     def test_weak_password_rejected_on_signup(self):
         status, payload = Client(self.port).request("POST", "/api/signup-requests", {"name": "Fraca Teste", "email": "fraca@exemplo.com", "cpf": valid_cpf(11), "password": "12345678", "jobTitle": "ANALYST"})
         self.assertEqual(status, 400, payload)

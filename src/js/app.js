@@ -29,6 +29,7 @@ import { ACCESS_LEVEL_LABELS, isAdminOrAbove, isMaster } from "./models/access.j
 import { initTheme, bindThemeToggles } from "./ui/theme-toggle.js";
 import { observeTableScrollHints } from "./ui/table-scroll-hint.js";
 import { showToast } from "./ui/toast.js";
+import { getBackendMode } from "./infra/api-client.js";
 
 initTheme();
 bindThemeToggles();
@@ -130,6 +131,10 @@ window.matchMedia("(min-width: 861px)").addEventListener("change",(event)=>{if(e
 async function bootstrap() {
   const authService=new AuthService(new ApiAuthRepository());
   const authController=new AuthController({service:authService,root:appShell});
+  if(await getBackendMode()==="browser") {
+    content.innerHTML='<section class="directory-empty"><div><h2>Iniciando o backend Python…</h2><p>Sem servidor: o Python roda no seu navegador (Pyodide). A primeira abertura pode levar alguns segundos.</p></div></section>';
+    document.querySelector(".sidebar-note").textContent="Dados neste navegador · Python (Pyodide) + SQLite";
+  }
   const session=await authService.getSession();
   if(!session.authenticated) {
     authController.mode=session.needsSetup?"setup":"login";

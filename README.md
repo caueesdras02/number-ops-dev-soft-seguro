@@ -23,6 +23,18 @@ python server.py --backup      # copia o banco para data/backups/ e sai
 
 No primeiro acesso, a tela **Configurar o Number Ops** cria a conta **MASTER** (nome, e-mail, CPF e senha forte).
 
+### Online, sem servidor (GitHub Pages)
+
+**https://caueesdras02.github.io/number-ops-dev-soft-seguro/**
+
+Quando não encontra o `server.py`, o frontend roda **o mesmo backend Python** dentro do navegador com [Pyodide](https://pyodide.org) (Python compilado para WebAssembly), num Web Worker:
+
+- `src/js/infra/api-client.js` detecta que não há servidor e envia cada chamada da API para `src/js/infra/python-worker.js`;
+- o worker carrega os arquivos de `backend/` e chama `backend/browser_app.py`, que passa pelas mesmas rotas e checagens do `http_app.py` (sessão, CSRF, permissões, validação, auditoria);
+- o banco SQLite fica no IndexedDB do navegador, e os dados continuam lá depois de recarregar a página. Na primeira abertura são inseridos os dados fictícios de demonstração.
+
+Diferenças em relação ao servidor: os dados ficam **só no navegador de quem usa** (não são compartilhados), o token de sessão fica no `localStorage` (sem cookie `HttpOnly`), e a primeira abertura baixa o Pyodide (~10 MB), o que leva alguns segundos. O hash PBKDF2 usa uma implementação em Python puro (`security.pbkdf2_sha256`), porque o Pyodide não tem OpenSSL. O resultado é idêntico (há teste para isso).
+
 Testes automatizados do backend:
 
 ```bash
@@ -36,6 +48,7 @@ number-ops/
 ├── server.py              # ponto de entrada (argumentos de linha de comando)
 ├── backend/               # servidor Python (somente biblioteca padrão)
 │   ├── http_app.py        # rotas da API JSON, sessão, CSRF, cabeçalhos de segurança, arquivos estáticos
+│   ├── browser_app.py     # ponte para rodar o backend no navegador (Pyodide / GitHub Pages)
 │   ├── database.py        # esquema SQLite (CHECKs, FKs, índices únicos) e backup
 │   ├── state.py           # validação e gravação dos dados operacionais + permissões por nível
 │   ├── accounts.py        # login, sessões, solicitações de acesso, usuários
